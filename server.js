@@ -5,36 +5,20 @@ require("dotenv").config();
 
 const app = express();
 
-/* =======================
-   CORS (Vercel frontend)
-   ======================= */
-const frontendUrl =
-  "https://portfolio2-4mx2-2jn48qiru-steves-projects-fd8cfd5b.vercel.app";
-
-app.use(
-  cors({
-    origin: frontendUrl,
-    methods: ["GET", "POST", "DELETE"],
-    allowedHeaders: ["Content-Type"],
-  })
-);
-
-/* =======================
-   Middleware
-   ======================= */
+/**
+ * ✅ CORS — SIMPLE & CORRECT
+ * This is exactly why your Todo app works
+ */
+app.use(cors());
 app.use(express.json());
 
-/* =======================
-   MongoDB
-   ======================= */
+// MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.error("❌ MongoDB error:", err));
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.error(err));
 
-/* =======================
-   Model
-   ======================= */
+// City model
 const citySchema = new mongoose.Schema({
   name: { type: String, required: true, unique: true },
   country: String,
@@ -42,13 +26,12 @@ const citySchema = new mongoose.Schema({
 
 const City = mongoose.model("City", citySchema);
 
-/* =======================
-   Routes
-   ======================= */
+// Test route
 app.get("/", (req, res) => {
-  res.send("Weather backend is running!");
+  res.send("Weather backend running");
 });
 
+// API routes
 app.get("/api/cities", async (req, res) => {
   const cities = await City.find();
   res.json(cities);
@@ -56,7 +39,8 @@ app.get("/api/cities", async (req, res) => {
 
 app.post("/api/cities", async (req, res) => {
   try {
-    const city = await City.create(req.body);
+    const city = new City(req.body);
+    await city.save();
     res.json(city);
   } catch (err) {
     if (err.code === 11000) {
@@ -71,10 +55,5 @@ app.delete("/api/cities/:id", async (req, res) => {
   res.json(await City.find());
 });
 
-/* =======================
-   Start server
-   ======================= */
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on ${PORT}`));
